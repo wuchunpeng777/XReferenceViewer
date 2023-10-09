@@ -1,1 +1,10 @@
-test
+{
+    "name": "com.xframe.xreferenceviewer",
+    "version": "0.0.1",
+    "displayName": "XReferenceViewer",
+    "description": "An editor tool that displays resource reference relationships",
+    "unity": "2021.1",
+    "keywords": ["editor","resource"],
+    "type": "tool",
+    "author": {"name":"wuchunpeng","email": "wcpwcp9@gmail.com"}
+}
