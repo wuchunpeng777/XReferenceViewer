@@ -31,6 +31,7 @@ namespace XReferenceViewer.Editor
         static bool OpenValidate()
         {
             var valid = false;
+            //wtodo:需要排除package路径
             foreach (UnityEngine.Object obj in Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets))
             {
                 var path = AssetDatabase.GetAssetPath(obj);
