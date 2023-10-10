@@ -11,6 +11,16 @@ namespace XReferenceViewer.Editor
 {
     public class XReferenceViewer : EditorWindow
     {
+        static XReferenceViewer()
+        {
+            EditorApplication.projectWindowChanged += OnProjectChanged;
+        }
+        
+        static void OnProjectChanged()
+        {
+            //wtodo:资源变化了
+        }
+        
         [MenuItem("Assets/XReferenceViewer", false, 0)]
         static void Open()
         {
