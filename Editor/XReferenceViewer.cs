@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -104,6 +105,7 @@ namespace XReferenceViewer.Editor
                 var inputPort = Port.Create<Edge>(Orientation.Horizontal, Direction.Input, Port.Capacity.Single,
                     typeof(Port));
                 inputContainer.Add(inputPort);
+                
 
                 var outputPort = Port.Create<Edge>(Orientation.Horizontal, Direction.Output, Port.Capacity.Single,
                     typeof(Port));
@@ -116,6 +118,32 @@ namespace XReferenceViewer.Editor
                 this.AddManipulator(clickable2);
 
                 RegisterCallback<ContextualMenuPopulateEvent>(MyMenuPopulateCB);
+
+                var objField = new ObjectField()
+                {
+                    objectType = typeof(GameObject),
+                    allowSceneObjects = false,
+                    value = null,
+                };
+                
+                var preview = new Image();
+                var previewContainer = new UnityEngine.UIElements.VisualElement();
+                previewContainer.style.width = StyleKeyword.Auto;//100;
+                previewContainer.style.height = 100;
+                previewContainer.style.backgroundColor = Color.black;
+                previewContainer.style.flexDirection = FlexDirection.Row;
+                previewContainer.style.justifyContent = Justify.Center;
+                this.Add(previewContainer);
+                
+                objField.RegisterValueChangedCallback(v =>
+                {
+                    preview.image = AssetPreview.GetAssetPreview(objField.value) ??
+                                    AssetPreview.GetMiniThumbnail(objField.value);
+                });
+                this.Add(objField);
+                
+                previewContainer.Add(preview);
+                preview.StretchToParentSize();
             }
 
             public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
