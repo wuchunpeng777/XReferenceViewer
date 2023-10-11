@@ -71,7 +71,11 @@ namespace XReferenceViewer.Editor
                 var gridBackground = new GridBackground();
                 Insert(0, gridBackground);
                 gridBackground.StretchToParentSize();
-                AddElement(new SampleNode());
+                var node1 = new SampleNode();
+                var node2 = new SampleNode();
+                AddElement(node1);
+                AddElement(node2);
+                AddEdgeByPorts(node1.outputContainer[0] as Port, node2.inputContainer[0] as Port);
                 this.AddManipulator(new SelectionDragger());
                 this.AddManipulator(new ContentDragger());
                 this.AddManipulator(new ContentZoomer());
@@ -80,6 +84,17 @@ namespace XReferenceViewer.Editor
                 click.target.RegisterCallback(new EventCallback<MouseDownEvent>(this.OnMouseDown));
             }
 
+            void AddEdgeByPorts(Port outputPort, Port inputPort)
+            {
+                var tempEdge = new Edge()
+                {
+                    output = outputPort,
+                    input = inputPort
+                };
+                tempEdge.input.Connect(tempEdge);
+                tempEdge.output.Connect(tempEdge);
+                Add(tempEdge);
+            }
 
             public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
             {
@@ -90,10 +105,6 @@ namespace XReferenceViewer.Editor
                 ClearSelection();
             }
 
-            public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
-            {
-                return ports.ToList();
-            }
         }
 
         public class SampleNode : Node
@@ -106,17 +117,19 @@ namespace XReferenceViewer.Editor
                     typeof(Port));
                 inputContainer.Add(inputPort);
                 
-
                 var outputPort = Port.Create<Edge>(Orientation.Horizontal, Direction.Output, Port.Capacity.Single,
                     typeof(Port));
+                outputPort.RemoveManipulator(outputPort.edgeConnector);
                 outputContainer.Add(outputPort);
                 var clickable2 = new Clickable(OnDoubleClick);
                 clickable2.activators.Clear();
                 clickable2.activators.Add(new ManipulatorActivationFilter
                     {button = MouseButton.LeftMouse, clickCount = 2});
 
-                this.AddManipulator(clickable2);
+                this.capabilities ^= Capabilities.Deletable;
 
+                this.AddManipulator(clickable2);
+                
                 RegisterCallback<ContextualMenuPopulateEvent>(MyMenuPopulateCB);
 
                 var objField = new ObjectField()
@@ -125,30 +138,29 @@ namespace XReferenceViewer.Editor
                     allowSceneObjects = false,
                     value = null,
                 };
-                
+
                 var preview = new Image();
                 var previewContainer = new UnityEngine.UIElements.VisualElement();
-                previewContainer.style.width = StyleKeyword.Auto;//100;
+                previewContainer.style.width = StyleKeyword.Auto; //100;
                 previewContainer.style.height = 100;
                 previewContainer.style.backgroundColor = Color.black;
                 previewContainer.style.flexDirection = FlexDirection.Row;
                 previewContainer.style.justifyContent = Justify.Center;
                 this.Add(previewContainer);
-                
+
                 objField.RegisterValueChangedCallback(v =>
                 {
                     preview.image = AssetPreview.GetAssetPreview(objField.value) ??
                                     AssetPreview.GetMiniThumbnail(objField.value);
                 });
                 this.Add(objField);
-                
+
                 previewContainer.Add(preview);
                 preview.StretchToParentSize();
             }
 
             public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
             {
-                
             }
 
             void MyMenuPopulateCB(ContextualMenuPopulateEvent evt)
