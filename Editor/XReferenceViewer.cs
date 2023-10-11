@@ -86,14 +86,16 @@ namespace XReferenceViewer.Editor
 
             void AddEdgeByPorts(Port outputPort, Port inputPort)
             {
-                var tempEdge = new Edge()
+                var edge = new Edge()
                 {
                     output = outputPort,
                     input = inputPort
                 };
-                tempEdge.input.Connect(tempEdge);
-                tempEdge.output.Connect(tempEdge);
-                Add(tempEdge);
+                edge.capabilities ^= Capabilities.Selectable;
+                edge.capabilities ^= Capabilities.Deletable;
+                edge.input.Connect(edge);
+                edge.output.Connect(edge);
+                Add(edge);
             }
 
             public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
@@ -104,7 +106,7 @@ namespace XReferenceViewer.Editor
             {
                 ClearSelection();
             }
-
+            
         }
 
         public class SampleNode : Node
@@ -116,6 +118,7 @@ namespace XReferenceViewer.Editor
                 var inputPort = Port.Create<Edge>(Orientation.Horizontal, Direction.Input, Port.Capacity.Single,
                     typeof(Port));
                 inputContainer.Add(inputPort);
+                inputPort.RemoveManipulator(inputPort.edgeConnector);
                 
                 var outputPort = Port.Create<Edge>(Orientation.Horizontal, Direction.Output, Port.Capacity.Single,
                     typeof(Port));
