@@ -19,6 +19,7 @@ namespace XReferenceViewer.Editor
         static void OnProjectChanged()
         {
             //wtodo:资源变化了
+            Debug.Log("资源变化了");
         }
         
         [MenuItem("Assets/XReferenceViewer", false, 0)]
@@ -97,7 +98,15 @@ namespace XReferenceViewer.Editor
                 
                 var outputPort = Port.Create<Edge>(Orientation.Horizontal,Direction.Output, Port.Capacity.Single, typeof(Port));
                 outputContainer.Add(outputPort);
+                
+                var clickable2 = new Clickable(OnDoubleClick);
+                clickable2.activators.Clear();
+                clickable2.activators.Add(new ManipulatorActivationFilter { button = MouseButton.LeftMouse, clickCount = 2 });
+
+                this.AddManipulator(clickable2);
             }
+            
+            void OnDoubleClick(EventBase evt) { Debug.Log("Double Click"); }
         }
         
         private static T LoadAssetFromPackage<T>(string packageFilePath) where T : UnityEngine.Object
