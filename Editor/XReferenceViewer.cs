@@ -79,6 +79,11 @@ namespace XReferenceViewer.Editor
                 click.target.RegisterCallback(new EventCallback<MouseDownEvent>(this.OnMouseDown));
             }
 
+
+            public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
+            {
+            }
+
             protected void OnMouseDown(MouseDownEvent e)
             {
                 ClearSelection();
@@ -109,6 +114,19 @@ namespace XReferenceViewer.Editor
                     {button = MouseButton.LeftMouse, clickCount = 2});
 
                 this.AddManipulator(clickable2);
+
+                RegisterCallback<ContextualMenuPopulateEvent>(MyMenuPopulateCB);
+            }
+
+            public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
+            {
+                
+            }
+
+            void MyMenuPopulateCB(ContextualMenuPopulateEvent evt)
+            {
+                evt.menu.MenuItems().Clear();
+                evt.menu.AppendAction("Ping", (a) => { Debug.Log("test"); }, DropdownMenuAction.AlwaysEnabled);
             }
 
             void OnDoubleClick(EventBase evt)
