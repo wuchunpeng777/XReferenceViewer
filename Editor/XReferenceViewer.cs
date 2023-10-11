@@ -15,13 +15,13 @@ namespace XReferenceViewer.Editor
         {
             EditorApplication.projectWindowChanged += OnProjectChanged;
         }
-        
+
         static void OnProjectChanged()
         {
             //wtodo:资源变化了
             Debug.Log("资源变化了");
         }
-        
+
         [MenuItem("Assets/XReferenceViewer", false, 0)]
         static void Open()
         {
@@ -57,7 +57,7 @@ namespace XReferenceViewer.Editor
         {
             rootVisualElement.Add(new SampleGraphView()
             {
-                style = { flexGrow = 1}
+                style = {flexGrow = 1}
             });
         }
 
@@ -73,12 +73,15 @@ namespace XReferenceViewer.Editor
                 AddElement(new SampleNode());
                 this.AddManipulator(new SelectionDragger());
                 this.AddManipulator(new ContentDragger());
-                SetupZoom(ContentZoomer.DefaultMinScale,ContentZoomer.DefaultMaxScale);
+                this.AddManipulator(new ContentZoomer());
+                var click = new ClickSelector();
+                this.AddManipulator(click);
+                click.target.RegisterCallback(new EventCallback<MouseDownEvent>(this.OnMouseDown));
+            }
 
-                nodeCreationRequest += _context =>
-                {
-                    AddElement(new SampleNode());
-                };
+            protected void OnMouseDown(MouseDownEvent e)
+            {
+                ClearSelection();
             }
 
             public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
@@ -92,23 +95,28 @@ namespace XReferenceViewer.Editor
             public SampleNode()
             {
                 title = "Sample Node";
-                
-                var inputPort = Port.Create<Edge>(Orientation.Horizontal,Direction.Input, Port.Capacity.Single, typeof(Port));
+
+                var inputPort = Port.Create<Edge>(Orientation.Horizontal, Direction.Input, Port.Capacity.Single,
+                    typeof(Port));
                 inputContainer.Add(inputPort);
-                
-                var outputPort = Port.Create<Edge>(Orientation.Horizontal,Direction.Output, Port.Capacity.Single, typeof(Port));
+
+                var outputPort = Port.Create<Edge>(Orientation.Horizontal, Direction.Output, Port.Capacity.Single,
+                    typeof(Port));
                 outputContainer.Add(outputPort);
-                
                 var clickable2 = new Clickable(OnDoubleClick);
                 clickable2.activators.Clear();
-                clickable2.activators.Add(new ManipulatorActivationFilter { button = MouseButton.LeftMouse, clickCount = 2 });
+                clickable2.activators.Add(new ManipulatorActivationFilter
+                    {button = MouseButton.LeftMouse, clickCount = 2});
 
                 this.AddManipulator(clickable2);
             }
-            
-            void OnDoubleClick(EventBase evt) { Debug.Log("Double Click"); }
+
+            void OnDoubleClick(EventBase evt)
+            {
+                Debug.Log("Double Click");
+            }
         }
-        
+
         private static T LoadAssetFromPackage<T>(string packageFilePath) where T : UnityEngine.Object
         {
             // try to load as a package path
@@ -116,7 +124,7 @@ namespace XReferenceViewer.Editor
             var asset = AssetDatabase.LoadAssetAtPath<T>(possibleAssetFilePath);
             if (asset != null)
                 return asset;
- 
+
             // try to convert path to a package path from a presumed package display path
             var splits = packageFilePath.Split('/');
             if (splits.Length >= 1)
@@ -127,7 +135,7 @@ namespace XReferenceViewer.Editor
                 {
                     splits[1] = possiblePackageName;
                     var possiblePackageFilePath = string.Join('/', splits);
- 
+
                     var possibleAsset = AssetDatabase.LoadAssetAtPath<T>(possiblePackageFilePath);
                     if (possibleAsset != null)
                         return possibleAsset;
@@ -136,11 +144,11 @@ namespace XReferenceViewer.Editor
 
             return null;
         }
- 
+
         private static string PackageDisplayNameToPackageName(string packageDisplayName)
         {
             var packages = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages();
- 
+
             return packages
                 .Where(package => package.displayName == packageDisplayName)
                 .Select(package => package.name)
