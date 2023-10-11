@@ -160,6 +160,9 @@ namespace XReferenceViewer.Editor
 
                 previewContainer.Add(preview);
                 preview.StretchToParentSize();
+
+                var collapseButton = this.Q("collapse-button");
+                collapseButton.parent.Remove(collapseButton);
             }
 
             public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
