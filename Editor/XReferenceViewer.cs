@@ -54,38 +54,52 @@ namespace XReferenceViewer.Editor
             return valid;
         }
 
+        private NodeGraphView graphView;
         private void OnEnable()
         {
-            rootVisualElement.Add(new SampleGraphView()
+            graphView = new NodeGraphView()
             {
                 style = {flexGrow = 1}
-            });
+            };
+            graphView.OnGraphViewReady = OnGraphViewReady;
+            rootVisualElement.Add(graphView);
         }
 
-        public class SampleGraphView : GraphView
+        void OnGraphViewReady()
         {
-            public SampleGraphView() : base()
+            graphView.AddElement(new Node());
+        }
+
+        public class NodeGraphView : GraphView
+        {
+            public Action OnGraphViewReady;
+            public NodeGraphView() : base()
             {
                 var styleSheet = LoadAssetFromPackage<StyleSheet>("XReferenceViewer/PackageResource/Style.uss");
                 styleSheets.Add(styleSheet);
                 var gridBackground = new GridBackground();
                 Insert(0, gridBackground);
                 gridBackground.StretchToParentSize();
-                var node1 = new SampleNode();
-                var node2 = new SampleNode();
-                AddElement(node1);
-                AddElement(node2);
-                AddEdgeByPorts(node1.outputContainer[0] as Port, node2.inputContainer[0] as Port);
+                
                 this.AddManipulator(new SelectionDragger());
                 this.AddManipulator(new ContentDragger());
                 this.AddManipulator(new ContentZoomer());
+                
                 var click = new ClickSelector();
                 this.AddManipulator(click);
                 click.target.RegisterCallback(new EventCallback<MouseDownEvent>(this.OnMouseDown));
+
+                var timer = this.schedule.Execute(() =>
+                {
+                    OnGraphViewReady?.Invoke();
+                });
+                timer.ExecuteLater(1L);
             }
 
-            void AddEdgeByPorts(Port outputPort, Port inputPort)
+            void LinkNode(Node nodeLeft, Node nodeRight)
             {
+                var outputPort = nodeLeft.outputContainer[0] as Port;
+                var inputPort = nodeRight.inputContainer[0] as Port;
                 var edge = new Edge()
                 {
                     output = outputPort,
@@ -106,34 +120,116 @@ namespace XReferenceViewer.Editor
             {
                 ClearSelection();
             }
-            
         }
 
-        public class SampleNode : Node
+        public class BaseAssetNode : Node
         {
-            public SampleNode()
-            {
-                title = "Sample Node";
+            protected string AssetPath;
 
-                var inputPort = Port.Create<Edge>(Orientation.Horizontal, Direction.Input, Port.Capacity.Single,
-                    typeof(Port));
-                inputContainer.Add(inputPort);
-                inputPort.RemoveManipulator(inputPort.edgeConnector);
-                
-                var outputPort = Port.Create<Edge>(Orientation.Horizontal, Direction.Output, Port.Capacity.Single,
-                    typeof(Port));
-                outputPort.RemoveManipulator(outputPort.edgeConnector);
-                outputContainer.Add(outputPort);
-                var clickable2 = new Clickable(OnDoubleClick);
-                clickable2.activators.Clear();
-                clickable2.activators.Add(new ManipulatorActivationFilter
-                    {button = MouseButton.LeftMouse, clickCount = 2});
+            public BaseAssetNode(string assetPath) : base()
+            {
+                AssetPath = assetPath;
 
                 this.capabilities ^= Capabilities.Deletable;
 
-                this.AddManipulator(clickable2);
-                
-                RegisterCallback<ContextualMenuPopulateEvent>(MyMenuPopulateCB);
+                AddDoubleClick();
+
+                RegisterCallback<ContextualMenuPopulateEvent>(MenuPopulateCallback);
+
+                var preview = new Image();
+                var previewContainer = new UnityEngine.UIElements.VisualElement();
+                previewContainer.style.width = StyleKeyword.Auto; //100;
+                previewContainer.style.height = 100;
+                previewContainer.style.backgroundColor = Color.black;
+                previewContainer.style.flexDirection = FlexDirection.Row;
+                previewContainer.style.justifyContent = Justify.Center;
+                this.Add(previewContainer);
+                var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(AssetPath);
+                preview.image = AssetPreview.GetAssetPreview(obj) ??
+                                AssetPreview.GetMiniThumbnail(obj);
+                previewContainer.Add(preview);
+                preview.StretchToParentSize();
+
+                var collapseButton = this.Q("collapse-button");
+                collapseButton.parent.Remove(collapseButton);
+
+                RefreshTitle();
+            }
+
+            void RefreshTitle()
+            {
+                var fileName = Path.GetFileNameWithoutExtension(AssetPath);
+                title = fileName;
+            }
+
+            void AddDoubleClick()
+            {
+                var clickable = new Clickable(OnDoubleClick);
+                clickable.activators.Clear();
+                clickable.activators.Add(new ManipulatorActivationFilter
+                    {button = MouseButton.LeftMouse, clickCount = 2});
+
+                this.AddManipulator(clickable);
+            }
+
+            protected void AddInputPort(Color color = default)
+            {
+                var port = Port.Create<Edge>(Orientation.Horizontal, Direction.Input, Port.Capacity.Single,
+                    typeof(Port));
+                if (color != default)
+                    port.portColor = color;
+                port.RemoveManipulator(port.edgeConnector);
+                inputContainer.Add(port);
+            }
+
+            protected void AddOutputPort(Color color = default)
+            {
+                var port = Port.Create<Edge>(Orientation.Horizontal, Direction.Output, Port.Capacity.Single,
+                    typeof(Port));
+                if (color != default)
+                    port.portColor = color;
+                port.RemoveManipulator(port.edgeConnector);
+                outputContainer.Add(port);
+            }
+
+            void OnDoubleClick(EventBase evt)
+            {
+                //wtodo:双击打开资源
+            }
+
+            void MenuPopulateCallback(ContextualMenuPopulateEvent evt)
+            {
+                evt.menu.MenuItems().Clear();
+                evt.menu.AppendAction("Ping", (a) =>
+                {
+                    //wtodo
+                }, DropdownMenuAction.AlwaysEnabled);
+            }
+        }
+
+        public class OwnerNode : BaseAssetNode
+        {
+            public OwnerNode(string assetPath) : base(assetPath)
+            {
+                AddOutputPort(Color.yellow);
+            }
+        }
+
+        public class DependentNode : BaseAssetNode
+        {
+            public DependentNode(string assetPath) : base(assetPath)
+            {
+                AddInputPort(Color.cyan);
+            }
+        }
+
+        public class SourceNode : BaseAssetNode
+        {
+            public SourceNode(string assetPath) : base(assetPath)
+            {
+                AddInputPort();
+                AddOutputPort();
+
 
                 var objField = new ObjectField()
                 {
@@ -167,17 +263,6 @@ namespace XReferenceViewer.Editor
 
             public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
             {
-            }
-
-            void MyMenuPopulateCB(ContextualMenuPopulateEvent evt)
-            {
-                evt.menu.MenuItems().Clear();
-                evt.menu.AppendAction("Ping", (a) => { Debug.Log("test"); }, DropdownMenuAction.AlwaysEnabled);
-            }
-
-            void OnDoubleClick(EventBase evt)
-            {
-                Debug.Log("Double Click");
             }
         }
 
