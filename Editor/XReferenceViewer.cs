@@ -67,7 +67,7 @@ namespace XReferenceViewer.Editor
 
         void OnGraphViewReady()
         {
-            graphView.AddElement(new Node());
+            graphView.AddElement(new OwnerNode("Assets/Scenes/Directional Light.prefab"));
         }
 
         public class NodeGraphView : GraphView
@@ -132,8 +132,6 @@ namespace XReferenceViewer.Editor
 
                 this.capabilities ^= Capabilities.Deletable;
 
-                AddDoubleClick();
-
                 RegisterCallback<ContextualMenuPopulateEvent>(MenuPopulateCallback);
 
                 var preview = new Image();
@@ -150,16 +148,48 @@ namespace XReferenceViewer.Editor
                 previewContainer.Add(preview);
                 preview.StretchToParentSize();
 
+                AddObjectTypeArea();
+                AddDoubleClick();
+                RemoveCollapseButton();
+                
+                RefreshTitle();
+                RefreshObjectType();
+                
+                tooltip = AssetPath;
+            }
+
+            void RemoveCollapseButton()
+            {
                 var collapseButton = this.Q("collapse-button");
                 collapseButton.parent.Remove(collapseButton);
+            }
 
-                RefreshTitle();
+            protected void RemoveInputArea()
+            {
+                var inputArea = this.Q("input");
+                inputArea.parent.Remove(inputArea);
+            }
+            
+            protected void RemoveOutputArea()
+            {
+                var outputArea = this.Q("output");
+                outputArea.parent.Remove(outputArea);
             }
 
             void RefreshTitle()
             {
                 var fileName = Path.GetFileNameWithoutExtension(AssetPath);
                 title = fileName;
+            }
+
+            void AddObjectTypeArea()
+            {
+                //wtodo
+            }
+
+            void RefreshObjectType()
+            {
+                //wtodo
             }
 
             void AddDoubleClick()
@@ -212,6 +242,7 @@ namespace XReferenceViewer.Editor
             public OwnerNode(string assetPath) : base(assetPath)
             {
                 AddOutputPort(Color.yellow);
+                RemoveInputArea();
             }
         }
 
@@ -220,6 +251,7 @@ namespace XReferenceViewer.Editor
             public DependentNode(string assetPath) : base(assetPath)
             {
                 AddInputPort(Color.cyan);
+                RemoveOutputArea();
             }
         }
 
