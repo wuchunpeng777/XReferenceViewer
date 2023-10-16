@@ -122,7 +122,7 @@ namespace XReferenceViewer.Editor
             }
         }
 
-        public class BaseAssetNode : Node
+        public class BaseAssetNode : XReferenceViewerNode
         {
             protected string AssetPath;
 
@@ -241,8 +241,8 @@ namespace XReferenceViewer.Editor
         {
             public OwnerNode(string assetPath) : base(assetPath)
             {
-                AddOutputPort(Color.yellow);
-                RemoveInputArea();
+                // AddOutputPort(Color.yellow);
+                // RemoveInputArea();
             }
         }
 
