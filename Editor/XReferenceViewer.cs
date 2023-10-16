@@ -59,9 +59,9 @@ namespace XReferenceViewer.Editor
         {
             // First parameter is the path in the Settings window.
             // Second parameter is the scope of this setting: it only appears in the Settings window for the Project scope.
-            var provider = new SettingsProvider("Project/MyCustomUIElementsSettings", SettingsScope.Project)
+            var provider = new SettingsProvider("Project/XReferenceViewer", SettingsScope.Project)
             {
-                label = "Custom UI Elements",
+                label = "XReferenceViewer",
                 // activateHandler is called when the user clicks on the Settings item in the Settings window.
                 activateHandler = (searchContext, rootElement) =>
                 {
