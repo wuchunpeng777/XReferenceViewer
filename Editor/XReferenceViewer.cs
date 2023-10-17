@@ -116,6 +116,8 @@ namespace XReferenceViewer.Editor
         void OnGraphViewReady()
         {
             graphView.AddElement(new OwnerNode("Assets/Scenes/Directional Light.prefab"));
+            graphView.AddElement(new SourceNode("Assets/Scenes/Directional Light.prefab"));
+            graphView.AddElement(new DependentNode("Assets/Scenes/Directional Light.prefab"));
         }
 
       

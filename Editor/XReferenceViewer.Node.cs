@@ -132,6 +132,9 @@ namespace XReferenceViewer.Editor
 
                 RefreshTitle();
                 RefreshObjectType();
+                
+                var border = this.Q<VisualElement>("selection-border");
+                SetElementVisible(border,false);
             }
 
             void AddPreview()
@@ -153,6 +156,7 @@ namespace XReferenceViewer.Editor
                     port.portColor = color;
                 port.RemoveManipulator(port.edgeConnector);
                 port.style.translate = new Translate(0, Length.Percent(-50));
+                port.pickingMode = PickingMode.Ignore;
                 inputContainer.Add(port);
                 SetElementVisible(port.Q<Label>("type"),false);
             }
@@ -183,6 +187,7 @@ namespace XReferenceViewer.Editor
                     port.portColor = color;
                 port.RemoveManipulator(port.edgeConnector);
                 port.style.translate = new Translate(0, Length.Percent(-50));
+                port.pickingMode = PickingMode.Ignore;
                 outputContainer.Add(port);
                 SetElementVisible(port.Q<Label>("type"),false);
             }
@@ -191,6 +196,10 @@ namespace XReferenceViewer.Editor
             {
                 var fileName = Path.GetFileNameWithoutExtension(AssetPath);
                 title = fileName;
+                var extension = Path.GetExtension(AssetPath);
+                var assetType = AssetType.GetAssetType(extension);
+                TypeText = assetType.name;
+                this.Q<VisualElement>("content").style.backgroundColor = assetType.color;
             }
 
             void RefreshObjectType()
@@ -216,11 +225,15 @@ namespace XReferenceViewer.Editor
             public override void OnSelected()
             {
                 base.OnSelected();
+                var border = this.Q<VisualElement>("selection-border");
+                SetElementVisible(border,true);
             }
 
             public override void OnUnselected()
             {
                 base.OnUnselected();
+                var border = this.Q<VisualElement>("selection-border");
+                SetElementVisible(border,false);
             }
 
             public virtual void BuildContextualMenu(ContextualMenuPopulateEvent evt)
