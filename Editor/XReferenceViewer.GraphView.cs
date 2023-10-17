@@ -30,7 +30,7 @@ namespace XReferenceViewer.Editor
                 timer.ExecuteLater(1L);
             }
 
-            public void LinkNode(XReferenceViewerNode outputNode, XReferenceViewerNode inputNode)
+            public Edge LinkNode(XReferenceViewerNode outputNode, XReferenceViewerNode inputNode)
             {
                 var outputPort = outputNode.outputContainer[0] as Port;
                 var inputPort = inputNode.inputContainer[0] as Port;
@@ -43,7 +43,8 @@ namespace XReferenceViewer.Editor
                 edge.capabilities ^= Capabilities.Deletable;
                 edge.input.Connect(edge);
                 edge.output.Connect(edge);
-                Add(edge);
+                AddElement(edge);
+                return edge;
             }
 
             public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)

@@ -131,7 +131,6 @@ namespace XReferenceViewer.Editor
                 AddDoubleClick();
 
                 RefreshTitle();
-                RefreshObjectType();
                 
                 var border = this.Q<VisualElement>("selection-border");
                 SetElementVisible(border,false);
@@ -202,11 +201,6 @@ namespace XReferenceViewer.Editor
                 this.Q<VisualElement>("content").style.backgroundColor = assetType.color;
             }
 
-            void RefreshObjectType()
-            {
-                //wtodo
-            }
-
             void AddDoubleClick()
             {
                 var clickable = new Clickable(OnDoubleClick);
@@ -220,6 +214,7 @@ namespace XReferenceViewer.Editor
             void OnDoubleClick(EventBase evt)
             {
                 //wtodo:双击打开资源
+                XReferenceViewer.HandleTarget(AssetPath);
             }
 
             public override void OnSelected()

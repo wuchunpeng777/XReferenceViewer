@@ -29,7 +29,16 @@ namespace XReferenceViewer.Editor
         [MenuItem("Assets/XReferenceViewer", false, 0)]
         static void Open()
         {
-            GetWindow<XReferenceViewer>();
+            TargetObjects.Clear();
+
+            var valid = false;
+            //wtodo:需要排除package路径
+            foreach (UnityEngine.Object obj in Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets))
+            {
+                TargetObjects.Add(obj);
+            }
+            var window = GetWindow<XReferenceViewer>();
+            window.InitUI();
         }
 
         [MenuItem("Assets/XReferenceViewer", true)]
@@ -107,30 +116,69 @@ namespace XReferenceViewer.Editor
             return provider;
         }
 
+        
         private NodeGraphView graphView;
+        private List<XReferenceViewerNode> Nodes = new List<XReferenceViewerNode>();
+        private List<Edge> Edges = new List<Edge>();
 
-        private void OnEnable()
+        private OwnerNode ownerNode;
+
+        void InitUI()
         {
-            graphView = new NodeGraphView()
+            if (graphView == null)
             {
-                style = {flexGrow = 1}
-            };
-            graphView.OnGraphViewReady = OnGraphViewReady;
-            rootVisualElement.Add(graphView);
+                graphView = new NodeGraphView()
+                {
+                    style = {flexGrow = 1}
+                };
+                graphView.OnGraphViewReady = OnGraphViewReady;
+                rootVisualElement.Add(graphView);
+            }
+            else
+            {
+                OnGraphViewReady();
+            }
         }
 
         void OnGraphViewReady()
         {
+            foreach (var node in Nodes)
+            {
+                graphView.RemoveElement(node);
+            }
+            Nodes.Clear();
+
+            foreach (var edge in Edges)
+            {
+                graphView.RemoveElement(edge);
+            }
+            Edges.Clear();
+            
             foreach (var target in TargetObjects)
             {
                 var path = AssetDatabase.GetAssetPath(target);
-                var ownerNode = new OwnerNode(path);
+                ownerNode = new OwnerNode(path);
                 graphView.AddElement(ownerNode);
+                ownerNode.SetPosition(new Rect(10, 100, ownerNode.GetPosition().width, ownerNode.GetPosition().height));
+                Nodes.Add(ownerNode);
                 FillDependenceNode(ownerNode);
             }
 
-            var timer = graphView.schedule.Execute(() => { graphView.FrameAll(); });
+            var timer = graphView.schedule.Execute(() => { RefreshNodePosition(); });
             timer.ExecuteLater(1L);
+        }
+
+        public static void HandleTarget(string assetPath)
+        {
+            var window = GetWindow<XReferenceViewer>();
+            TargetObjects.Clear();
+            TargetObjects.Add(AssetDatabase.LoadAssetAtPath<Object>(assetPath));
+            window.graphView.OnGraphViewReady();
+        }
+
+        void RefreshNodePosition()
+        {
+            Debug.Log(ownerNode.GetPosition());
         }
 
         void FillDependenceNode(OwnerNode owner)
@@ -139,8 +187,10 @@ namespace XReferenceViewer.Editor
             foreach (var dependence in assetDependencies)
             {
                 var dependenceNode = new DependentNode(dependence);
+                Nodes.Add(dependenceNode);
                 graphView.AddElement(dependenceNode);
-                graphView.LinkNode(owner, dependenceNode);
+                var edge = graphView.LinkNode(owner, dependenceNode);
+                Edges.Add(edge);
             }
         }
     }
