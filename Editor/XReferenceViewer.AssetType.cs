@@ -9,7 +9,7 @@ namespace XReferenceViewer.Editor
         {
             private static readonly AssetType[] FILTERS =
             {
-                new AssetType("Scene", new Color(255f / 255, 153f / 255, 0, 1), ".unity"),
+                new AssetType("Scene", new Color(149f / 255, 89f / 255, 0, 1), ".unity"),
                 new AssetType("Prefab", new Color(33f / 255, 71f / 255, 149f / 255, 1), ".prefab"),
                 new AssetType("Model", new Color(102f / 255, 0, 153f / 255, 1), ".3df", ".3dm", ".3dmf", ".3dv", ".3dx",
                     ".c5d", ".lwo", ".lws", ".ma", ".mb",

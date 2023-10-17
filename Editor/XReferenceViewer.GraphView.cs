@@ -30,10 +30,10 @@ namespace XReferenceViewer.Editor
                 timer.ExecuteLater(1L);
             }
 
-            void LinkNode(Node nodeLeft, Node nodeRight)
+            public void LinkNode(XReferenceViewerNode outputNode, XReferenceViewerNode inputNode)
             {
-                var outputPort = nodeLeft.outputContainer[0] as Port;
-                var inputPort = nodeRight.inputContainer[0] as Port;
+                var outputPort = outputNode.outputContainer[0] as Port;
+                var inputPort = inputNode.inputContainer[0] as Port;
                 var edge = new Edge()
                 {
                     output = outputPort,

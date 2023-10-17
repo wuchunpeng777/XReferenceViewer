@@ -7,6 +7,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
 namespace XReferenceViewer.Editor
 {
@@ -23,6 +24,8 @@ namespace XReferenceViewer.Editor
             Debug.Log("资源变化了");
         }
 
+        private static List<Object> TargetObjects = new List<Object>();
+
         [MenuItem("Assets/XReferenceViewer", false, 0)]
         static void Open()
         {
@@ -32,10 +35,13 @@ namespace XReferenceViewer.Editor
         [MenuItem("Assets/XReferenceViewer", true)]
         static bool OpenValidate()
         {
+            TargetObjects.Clear();
+
             var valid = false;
             //wtodo:需要排除package路径
             foreach (UnityEngine.Object obj in Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets))
             {
+                TargetObjects.Add(obj);
                 var path = AssetDatabase.GetAssetPath(obj);
                 if (string.IsNullOrEmpty(path))
                     continue;
@@ -53,7 +59,7 @@ namespace XReferenceViewer.Editor
 
             return valid;
         }
-        
+
         [SettingsProvider]
         static SettingsProvider CreateSettingProvider()
         {
@@ -95,7 +101,7 @@ namespace XReferenceViewer.Editor
                 },
 
                 // Populate the search keywords to enable smart search filtering and label highlighting:
-                keywords = new HashSet<string>(new[] { "Number", "Some String" })
+                keywords = new HashSet<string>(new[] {"Number", "Some String"})
             };
 
             return provider;
@@ -115,11 +121,27 @@ namespace XReferenceViewer.Editor
 
         void OnGraphViewReady()
         {
-            graphView.AddElement(new OwnerNode("Assets/Scenes/Directional Light.prefab"));
-            graphView.AddElement(new SourceNode("Assets/Scenes/Directional Light.prefab"));
-            graphView.AddElement(new DependentNode("Assets/Scenes/Directional Light.prefab"));
+            foreach (var target in TargetObjects)
+            {
+                var path = AssetDatabase.GetAssetPath(target);
+                var ownerNode = new OwnerNode(path);
+                graphView.AddElement(ownerNode);
+                FillDependenceNode(ownerNode);
+            }
+
+            var timer = graphView.schedule.Execute(() => { graphView.FrameAll(); });
+            timer.ExecuteLater(1L);
         }
 
-      
+        void FillDependenceNode(OwnerNode owner)
+        {
+            var assetDependencies = AssetDatabase.GetDependencies(owner.AssetPath, false);
+            foreach (var dependence in assetDependencies)
+            {
+                var dependenceNode = new DependentNode(dependence);
+                graphView.AddElement(dependenceNode);
+                graphView.LinkNode(owner, dependenceNode);
+            }
+        }
     }
 }
