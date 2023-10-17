@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
 namespace XReferenceViewer.Editor
 {
@@ -135,14 +136,8 @@ namespace XReferenceViewer.Editor
 
             void AddPreview()
             {
+                var previewContainer = this.Q<VisualElement>("previewContainer");
                 var preview = new Image();
-                var previewContainer = new UnityEngine.UIElements.VisualElement();
-                previewContainer.style.width = StyleKeyword.Auto; //100;
-                previewContainer.style.height = 100;
-                previewContainer.style.backgroundColor = Color.black;
-                previewContainer.style.flexDirection = FlexDirection.Row;
-                previewContainer.style.justifyContent = Justify.Center;
-                this.Add(previewContainer);
                 var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(AssetPath);
                 preview.image = AssetPreview.GetAssetPreview(obj) ??
                                 AssetPreview.GetMiniThumbnail(obj);
@@ -157,7 +152,27 @@ namespace XReferenceViewer.Editor
                 if (color != default)
                     port.portColor = color;
                 port.RemoveManipulator(port.edgeConnector);
+                port.style.translate = new Translate(0, Length.Percent(-50));
                 inputContainer.Add(port);
+                SetElementVisible(port.Q<Label>("type"),false);
+            }
+            
+            private void SetElementVisible(VisualElement element, bool isVisible)
+            {
+                const string k_HiddenClassList = "hidden";
+
+                if (isVisible)
+                {
+                    // Restore default value for visibility by setting it to StyleKeyword.Null.
+                    // Setting it to Visibility.Visible would make it visible even if parent is hidden.
+                    element.style.visibility = StyleKeyword.Null;
+                    element.RemoveFromClassList(k_HiddenClassList);
+                }
+                else
+                {
+                    element.style.visibility = Visibility.Hidden;
+                    element.AddToClassList(k_HiddenClassList);
+                }
             }
 
             protected void AddOutputPort(Color color = default)
@@ -167,7 +182,9 @@ namespace XReferenceViewer.Editor
                 if (color != default)
                     port.portColor = color;
                 port.RemoveManipulator(port.edgeConnector);
+                port.style.translate = new Translate(0, Length.Percent(-50));
                 outputContainer.Add(port);
+                SetElementVisible(port.Q<Label>("type"),false);
             }
 
             void RefreshTitle()
@@ -211,7 +228,8 @@ namespace XReferenceViewer.Editor
                 evt.menu.MenuItems().Clear();
                 evt.menu.AppendAction("Ping", (a) =>
                 {
-                    //wtodo
+                    var obj = AssetDatabase.LoadAssetAtPath<Object>(AssetPath);
+                    EditorGUIUtility.PingObject(obj);
                 }, DropdownMenuAction.AlwaysEnabled);
             }
 
