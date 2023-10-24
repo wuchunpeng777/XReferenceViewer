@@ -17,6 +17,8 @@ namespace XReferenceViewer.Editor
             public OwnerNode(string assetPath) : base(assetPath)
             {
                 AddOutputPort();
+                //中心锚点
+                style.translate = new Translate(Length.Percent(-50), Length.Percent(-50));
             }
         }
 
@@ -25,6 +27,8 @@ namespace XReferenceViewer.Editor
             public DependentNode(string assetPath) : base(assetPath)
             {
                 AddInputPort();
+                //左上锚点
+                style.translate = new Translate(0, 0);
             }
         }
 
@@ -34,6 +38,8 @@ namespace XReferenceViewer.Editor
             {
                 AddInputPort();
                 AddOutputPort();
+                //右上角锚点
+                style.translate = new Translate(Length.Percent(-100), 0);
             }
         }
 
@@ -105,7 +111,7 @@ namespace XReferenceViewer.Editor
                     XReferenceViewer.LoadAssetFromPackage<VisualTreeAsset>(
                         "XReferenceViewer/PackageResource/Node.uxml");
                 treeAsset.CloneTree(this);
-
+                
                 OnInit();
             }
 
@@ -121,7 +127,7 @@ namespace XReferenceViewer.Editor
                 _TypeLabel = main.Q<Label>(name: "type-label");
 
                 capabilities |= Capabilities.Selectable | Capabilities.Movable |
-                                Capabilities.Ascendable | Capabilities.Copiable | Capabilities.Snappable |
+                                Capabilities.Ascendable | Capabilities.Copiable |
                                 Capabilities.Groupable;
 
                 this.AddManipulator(new ContextualMenuManipulator(BuildContextualMenu));

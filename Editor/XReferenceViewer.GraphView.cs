@@ -17,7 +17,7 @@ namespace XReferenceViewer.Editor
                 var gridBackground = new GridBackground();
                 Insert(0, gridBackground);
                 gridBackground.StretchToParentSize();
-
+                
                 this.AddManipulator(new SelectionDragger());
                 this.AddManipulator(new ContentDragger());
                 this.AddManipulator(new ContentZoomer());

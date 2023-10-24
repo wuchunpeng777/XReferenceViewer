@@ -37,6 +37,7 @@ namespace XReferenceViewer.Editor
             {
                 TargetObjects.Add(obj);
             }
+
             var window = GetWindow<XReferenceViewer>();
             window.InitUI();
         }
@@ -116,9 +117,10 @@ namespace XReferenceViewer.Editor
             return provider;
         }
 
-        
+
         private NodeGraphView graphView;
-        private List<XReferenceViewerNode> Nodes = new List<XReferenceViewerNode>();
+        private List<XReferenceViewerNode> SourceNodes = new List<XReferenceViewerNode>();
+        private List<XReferenceViewerNode> DependentNodes = new List<XReferenceViewerNode>();
         private List<Edge> Edges = new List<Edge>();
 
         private OwnerNode ownerNode;
@@ -142,30 +144,50 @@ namespace XReferenceViewer.Editor
 
         void OnGraphViewReady()
         {
-            foreach (var node in Nodes)
-            {
-                graphView.RemoveElement(node);
-            }
-            Nodes.Clear();
+            ClearView();
 
-            foreach (var edge in Edges)
-            {
-                graphView.RemoveElement(edge);
-            }
-            Edges.Clear();
-            
             foreach (var target in TargetObjects)
             {
                 var path = AssetDatabase.GetAssetPath(target);
                 ownerNode = new OwnerNode(path);
                 graphView.AddElement(ownerNode);
-                ownerNode.SetPosition(new Rect(10, 100, ownerNode.GetPosition().width, ownerNode.GetPosition().height));
-                Nodes.Add(ownerNode);
+                ownerNode.SetPosition(new Rect(0, 0, ownerNode.GetPosition().width, ownerNode.GetPosition().height));
                 FillDependenceNode(ownerNode);
             }
 
             var timer = graphView.schedule.Execute(() => { RefreshNodePosition(); });
             timer.ExecuteLater(1L);
+        }
+
+        void ClearView()
+        {
+            foreach (var node in SourceNodes)
+            {
+                graphView.RemoveElement(node);
+            }
+
+            SourceNodes.Clear();
+
+            foreach (var node in DependentNodes)
+            {
+                graphView.RemoveElement(node);
+            }
+
+            DependentNodes.Clear();
+
+            if (ownerNode != null)
+            {
+                graphView.RemoveElement(ownerNode);
+            }
+
+            ownerNode = null;
+
+            foreach (var edge in Edges)
+            {
+                graphView.RemoveElement(edge);
+            }
+
+            Edges.Clear();
         }
 
         public static void HandleTarget(string assetPath)
@@ -178,7 +200,52 @@ namespace XReferenceViewer.Editor
 
         void RefreshNodePosition()
         {
-            Debug.Log(ownerNode.GetPosition());
+            RefreshDependentNodePosition();
+            RefreshSourceNodePosition();
+        }
+
+        void RefreshDependentNodePosition()
+        {
+            var nodeHeight = ownerNode.GetPosition().height;
+            var nodeWidth = ownerNode.GetPosition().width;
+
+            var basePositionX = ownerNode.GetPosition().x + nodeWidth / 2 +
+                                XReferenceViewerSetting.Inst.HorizontalPadding;
+
+            var totalHeight = nodeHeight +
+                              (nodeHeight + XReferenceViewerSetting.Inst.VerticalPadding) * (DependentNodes.Count - 1);
+
+            var basePositionY = -totalHeight / 2;
+
+            for (int index = 0; index < DependentNodes.Count; index++)
+            {
+                var node = DependentNodes[index];
+                var positionY = (nodeHeight + XReferenceViewerSetting.Inst.VerticalPadding) * index + basePositionY;
+                node.SetPosition(
+                    new Rect(basePositionX, positionY, node.GetPosition().width, node.GetPosition().height));
+            }
+        }
+
+        void RefreshSourceNodePosition()
+        {
+            var nodeHeight = ownerNode.GetPosition().height;
+            var nodeWidth = ownerNode.GetPosition().width;
+
+            var basePositionX = ownerNode.GetPosition().x + nodeWidth / 2 +
+                                XReferenceViewerSetting.Inst.HorizontalPadding;
+
+            var totalHeight = nodeHeight +
+                              (nodeHeight + XReferenceViewerSetting.Inst.VerticalPadding) * (SourceNodes.Count - 1);
+
+            var basePositionY = -totalHeight / 2;
+
+            for (int index = 0; index < SourceNodes.Count; index++)
+            {
+                var node = SourceNodes[index];
+                var positionY = (nodeHeight + XReferenceViewerSetting.Inst.VerticalPadding) * index + basePositionY;
+                node.SetPosition(
+                    new Rect(basePositionX, positionY, node.GetPosition().width, node.GetPosition().height));
+            }
         }
 
         void FillDependenceNode(OwnerNode owner)
@@ -187,7 +254,7 @@ namespace XReferenceViewer.Editor
             foreach (var dependence in assetDependencies)
             {
                 var dependenceNode = new DependentNode(dependence);
-                Nodes.Add(dependenceNode);
+                DependentNodes.Add(dependenceNode);
                 graphView.AddElement(dependenceNode);
                 var edge = graphView.LinkNode(owner, dependenceNode);
                 Edges.Add(edge);
