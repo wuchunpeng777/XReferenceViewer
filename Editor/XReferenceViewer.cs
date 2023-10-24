@@ -202,6 +202,8 @@ namespace XReferenceViewer.Editor
         {
             RefreshDependentNodePosition();
             RefreshSourceNodePosition();
+
+            graphView.FrameAll();
         }
 
         void RefreshDependentNodePosition()
