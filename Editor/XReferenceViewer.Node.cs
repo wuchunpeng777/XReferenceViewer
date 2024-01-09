@@ -14,7 +14,7 @@ namespace XReferenceViewer.Editor
     {
         private class OwnerNode : XReferenceViewerNode
         {
-            public OwnerNode(string assetPath) : base(assetPath)
+            public OwnerNode(string assetPath,int itemCount=1) : base(assetPath,itemCount)
             {
                 AddOutputPort();
                 //中心锚点
@@ -24,7 +24,7 @@ namespace XReferenceViewer.Editor
 
         private class DependentNode : XReferenceViewerNode
         {
-            public DependentNode(string assetPath) : base(assetPath)
+            public DependentNode(string assetPath) : base(assetPath,1)
             {
                 AddInputPort();
                 //左上锚点
@@ -32,9 +32,9 @@ namespace XReferenceViewer.Editor
             }
         }
 
-        private class SourceNode : XReferenceViewerNode
+        private class RelyNode : XReferenceViewerNode
         {
-            public SourceNode(string assetPath) : base(assetPath)
+            public RelyNode(string assetPath) : base(assetPath,1)
             {
                 AddInputPort();
                 AddOutputPort();
@@ -101,11 +101,13 @@ namespace XReferenceViewer.Editor
             }
 
             public readonly string AssetPath;
+            public readonly int ItemCount;
 
-            public XReferenceViewerNode(string assetPath)
+            public XReferenceViewerNode(string assetPath,int itemCount)
             {
                 AssetPath = assetPath;
                 tooltip = AssetPath;
+                ItemCount = itemCount;
 
                 var treeAsset =
                     XReferenceViewer.LoadAssetFromPackage<VisualTreeAsset>(
@@ -200,6 +202,10 @@ namespace XReferenceViewer.Editor
             void RefreshTitle()
             {
                 var fileName = Path.GetFileNameWithoutExtension(AssetPath);
+                if(ItemCount > 0)
+                {
+                    fileName = $"{fileName} and other {ItemCount-1} items";
+                }
                 title = fileName;
                 var extension = Path.GetExtension(AssetPath);
                 var assetType = AssetType.GetAssetType(extension);

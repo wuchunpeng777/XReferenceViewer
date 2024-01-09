@@ -111,7 +111,7 @@ namespace XReferenceViewer.Editor
                 },
 
                 // Populate the search keywords to enable smart search filtering and label highlighting:
-                keywords = new HashSet<string>(new[] {"Number", "Some String"})
+                keywords = new HashSet<string>(new[] { "Number", "Some String" })
             };
 
             return provider;
@@ -131,7 +131,7 @@ namespace XReferenceViewer.Editor
             {
                 graphView = new NodeGraphView()
                 {
-                    style = {flexGrow = 1}
+                    style = { flexGrow = 1 }
                 };
                 graphView.OnGraphViewReady = OnGraphViewReady;
                 rootVisualElement.Add(graphView);
@@ -146,13 +146,35 @@ namespace XReferenceViewer.Editor
         {
             ClearView();
 
-            foreach (var target in TargetObjects)
+            if (TargetObjects.Count > 0)
             {
-                var path = AssetDatabase.GetAssetPath(target);
-                ownerNode = new OwnerNode(path);
-                graphView.AddElement(ownerNode);
-                ownerNode.SetPosition(new Rect(0, 0, ownerNode.GetPosition().width, ownerNode.GetPosition().height));
-                FillDependenceNode(ownerNode);
+                var firstObj = TargetObjects[0];
+                var firstObjPath = AssetDatabase.GetAssetPath(firstObj);
+                var rootNode = new OwnerNode(firstObjPath, TargetObjects.Count);
+                graphView.AddElement(rootNode);
+                rootNode.SetPosition(new Rect(0, 0, rootNode.GetPosition().width, rootNode.GetPosition().height));
+                ownerNode = rootNode;
+
+                var uniqueDependencePaths = new HashSet<string>();
+
+                foreach (var obj in TargetObjects)
+                {
+                    var assetPath = AssetDatabase.GetAssetPath(obj);
+                    var dependences = GetDependencePaths(assetPath);
+                    foreach (var dependence in dependences)
+                    {
+                        uniqueDependencePaths.Add(dependence);
+                    }
+                }
+
+                foreach (var dependence in uniqueDependencePaths)
+                {
+                    var dependenceNode = new DependentNode(dependence);
+                    DependentNodes.Add(dependenceNode);
+                    graphView.AddElement(dependenceNode);
+                    var edge = graphView.LinkNode(rootNode, dependenceNode);
+                    Edges.Add(edge);
+                }
             }
 
             var timer = graphView.schedule.Execute(() => { RefreshNodePosition(); });
@@ -261,6 +283,27 @@ namespace XReferenceViewer.Editor
                 var edge = graphView.LinkNode(owner, dependenceNode);
                 Edges.Add(edge);
             }
+        }
+
+        List<string> GetDependencePaths(string assetPath)
+        {
+            var paths = new List<string>();
+
+            var assetDependencies = AssetDatabase.GetDependencies(assetPath, false);
+            foreach (var dependence in assetDependencies)
+            {
+                paths.Add(dependence);
+            }
+
+            return paths;
+        }
+
+        //WTODO:待实现
+        List<string> GetRelyPaths(string assetPath)
+        {
+            var paths = new List<string>();
+
+            return paths;
         }
     }
 }
