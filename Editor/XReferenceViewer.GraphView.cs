@@ -1,6 +1,7 @@
 using System;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
+using UnityEngine;
 
 namespace XReferenceViewer.Editor
 {
@@ -13,7 +14,14 @@ namespace XReferenceViewer.Editor
             public NodeGraphView() : base()
             {
                 var styleSheet = LoadAssetFromPackage<StyleSheet>("XReferenceViewer/PackageResource/Style.uss");
-                styleSheets.Add(styleSheet);
+                if (styleSheet != null)
+                {
+                    styleSheets.Add(styleSheet);
+                }
+                else
+                {
+                    Debug.LogError("无法加载Style.uss样式表，请检查资源路径是否正确");
+                }
                 var gridBackground = new GridBackground();
                 Insert(0, gridBackground);
                 gridBackground.StretchToParentSize();

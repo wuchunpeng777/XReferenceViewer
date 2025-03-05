@@ -112,9 +112,15 @@ namespace XReferenceViewer.Editor
                 var treeAsset =
                     XReferenceViewer.LoadAssetFromPackage<VisualTreeAsset>(
                         "XReferenceViewer/PackageResource/Node.uxml");
-                treeAsset.CloneTree(this);
-                
-                OnInit();
+                if (treeAsset != null)
+                {
+                    treeAsset.CloneTree(this);
+                    OnInit();
+                }
+                else
+                {
+                    Debug.LogError("无法加载Node.uxml模板，请检查资源路径是否正确");
+                }
             }
 
             void OnInit()
